@@ -4,13 +4,15 @@ services:
     image: "postgres:latest"
     environment:
       - POSTGRES_PASSWORD=postgres_password
+    networks:
+      - internal
 
   email-reader:
     container_name: email-api
     image: appsuptime:email-reader
     build:
       context: ./email_reader
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     env_file:
       - ./email_reader/.env
     volumes:
