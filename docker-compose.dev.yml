@@ -1,0 +1,60 @@
+services:
+  postgres:
+    container_name: database
+    image: "postgres:latest"
+    environment:
+      - POSTGRES_PASSWORD=postgres_password
+
+  email-reader:
+    container_name: email-api
+    image: appsuptime:email-reader
+    build:
+      context: ./email_reader
+      dockerfile: Dockerfile
+    env_file:
+      - ./email_reader/.env
+    volumes:
+      - ./email_reader/src:/app/src
+    ports:
+      - 8001:80
+    environment:
+      - ENVIRONMENT=dev
+      - CACHE_CAPACITY_EMAIL_ID_LIST=10
+      - CACHE_CAPACITY_EMAIL_MODEL_LIST=3
+      - PAGE_SIZE=20
+
+  backend:
+    container_name: uptime-api
+    image: appsuptime:backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend/src:/app/src
+    ports:
+      - 8000:80
+      - 5678:5678
+    depends_on:
+      - postgres
+      - email-reader
+      # environment:
+      # - PGUSER=postgres
+      # - PGHOST=postgres
+      # - PGDATABASE=postgres
+      # - PGPASSWORD=postgres_password
+      # - PGPORT=5432
+      # - POETRY_VIRTUALENVS_IN_PROJECT=true
+
+      # frontend:
+      #   build:
+      #     context: .
+      #     dockerfile: Dockerfile.dev
+      #   ports:
+      #     - "3000:3000"
+      #   volumes:
+      #     - .:/app
+      #     - /app/node_modules
+      #   environment:
+      #     - NODE_ENV=development
+      #   depends_on:
+      #     - backend
