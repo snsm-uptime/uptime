@@ -1,0 +1,6 @@
+[submodule "backend"]
+	path = backend
+	url = git@github-uptime:snsm-uptime/backend.git
+[submodule "email_reader"]
+	path = email_reader
+	url = git@github-uptime:snsm-uptime/email_reader
