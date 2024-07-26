@@ -4,8 +4,6 @@ services:
     image: "postgres:latest"
     environment:
       - POSTGRES_PASSWORD=postgres_password
-    networks:
-      - internal
 
   email-reader:
     container_name: email-api
