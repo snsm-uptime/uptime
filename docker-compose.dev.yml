@@ -23,6 +23,7 @@ services:
       - ./email_reader/src:/app/src
     ports:
       - "8001:80"
+      - "5679:5679"
     environment:
       ENVIRONMENT: dev
       CACHE_CAPACITY_EMAIL_ID_LIST: 10
@@ -44,6 +45,7 @@ services:
       - postgres
       - email-reader
     environment:
+      ENVIRONMENT: dev
       DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
       EMAIL_PROCESSING_THREADS: 8
 
