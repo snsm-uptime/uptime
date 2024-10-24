@@ -1,4 +1,10 @@
 services:
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    ports:
+      - "11211:11211"
+
   postgres:
     container_name: database
     image: "postgres:latest"
