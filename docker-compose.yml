@@ -4,9 +4,12 @@ services:
     container_name: memcached
 
   postgres:
+    container_name: database
     image: "postgres:latest"
     environment:
-      - POSTGRES_PASSWORD=postgres_password
+      POSTGRES_PASSWORD: uptpgpw
+      POSTGRES_USER: uptime
+      POSTGRES_DB: uptime-db # Correct key is POSTGRES_DB, not POSTGRES_DATABASE
 
   email-reader:
     container_name: email-api
@@ -16,6 +19,13 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./email_reader/.env
+    ports:
+      - "8001:80"
+    environment:
+      ENVIRONMENT: prod
+      CACHE_CAPACITY_EMAIL_ID_LIST: 10
+      CACHE_CAPACITY_EMAIL_MODEL_LIST: 3
+      PAGE_SIZE: 20
 
   backend:
     container_name: uptime-api
@@ -24,28 +34,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - 8000:80
+      - "8000:80"
     depends_on:
-      # - postgres
+      - postgres
+      - memcached
       - email-reader
-      # environment:
-      # - PGUSER=postgres
-      # - PGHOST=postgres
-      # - PGDATABASE=postgres
-      # - PGPASSWORD=postgres_password
-      # - PGPORT=5432
-      # - POETRY_VIRTUALENVS_IN_PROJECT=true
-
-      # frontend:
-      #   build:
-      #     context: .
-      #     dockerfile: Dockerfile.dev
-      #   ports:
-      #     - "3000:3000"
-      #   volumes:
-      #     - .:/app
-      #     - /app/node_modules
-      #   environment:
-      #     - NODE_ENV=development
-      #   depends_on:
-      #     - backend
+    environment:
+      ENVIRONMENT: prod
+      DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
+      EMAIL_PROCESSING_THREADS: 8
