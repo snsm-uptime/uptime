@@ -11,15 +11,15 @@ services:
     environment:
       POSTGRES_PASSWORD: uptpgpw
       POSTGRES_USER: uptime
-      POSTGRES_DB: uptime-db # Correct key is POSTGRES_DB, not POSTGRES_DATABASE
+      POSTGRES_DB: uptime-db
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  email-reader:
+  email-api:
     container_name: email-api
-    image: appsuptime:email-reader
+    image: appsuptime:email-api
     build:
       context: ./email_reader
       dockerfile: Dockerfile.dev
@@ -36,20 +36,36 @@ services:
       CACHE_CAPACITY_EMAIL_MODEL_LIST: 3
       PAGE_SIZE: 20
 
-  backend:
+  uptime-migrations:
+    container_name: alembic
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    entrypoint: [ "poetry", "run", "alembic" ]
+    command: [ "upgrade", "head" ]
+    environment:
+      DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+
+  uptime-api:
     container_name: uptime-api
-    image: appsuptime:backend
+    image: appsuptime:uptime-api
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
     volumes:
       - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
     ports:
       - "8000:80"
       - "5678:5678"
     depends_on:
       - postgres
-      - email-reader
+      - email-api
     environment:
       ENVIRONMENT: dev
       DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
