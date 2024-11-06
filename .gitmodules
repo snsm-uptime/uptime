@@ -4,3 +4,6 @@
 [submodule "email_reader"]
   path = email_reader
   url = https://github.com/snsm-uptime/email_reader.git
+[submodule "ui"]
+	path = ui
+	url = https://github.com/snsm-uptime/ui.git
