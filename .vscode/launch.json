@@ -32,6 +32,17 @@
                 }
             ],
             "justMyCode": true
+        },
+        {
+            "name": "Container Debug: UI",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "address": "localhost",
+            "restart": true,
+            "sourceMaps": true,
+            "localRoot": "${workspaceFolder}/ui",
+            "remoteRoot": "/app",
         }
     ]
 }

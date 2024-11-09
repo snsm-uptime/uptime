@@ -41,8 +41,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    entrypoint: [ "poetry", "run", "alembic" ]
-    command: [ "upgrade", "head" ]
+    entrypoint: ["poetry", "run", "alembic"]
+    command: ["upgrade", "head"]
     environment:
       DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
     depends_on:
@@ -70,6 +70,23 @@ services:
       ENVIRONMENT: dev
       DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
       EMAIL_PROCESSING_THREADS: 8
+
+  ui:
+    container_name: ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./ui:/app
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - postgres
+      - uptime-api
+      - email-api
 
 volumes:
   postgres-data:
