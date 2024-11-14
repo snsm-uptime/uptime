@@ -1,0 +1,104 @@
+# This compose file is for developing the UI without backend and email-reader debuggers. (mounts are available to test quick changes)
+
+services:
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.dev
+    env_file:
+      - ./.env
+    volumes:
+      - ./ui:/app
+    ports:
+      - "3001:3000"
+    depends_on:
+      - uptime-api
+    networks:
+      - frontend-network
+    environment:
+      NODE_ENV: "development"
+      API_BASE_URL: ${API_BASE_URL}
+
+  uptime-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+    ports:
+      - "8000:80"
+    depends_on:
+      - postgres
+      - email-api
+    networks:
+      - backend-network
+      - frontend-network
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      EMAIL_PROCESSING_THREADS: 8
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  email-api:
+    build:
+      context: ./email_reader
+      dockerfile: Dockerfile
+    volumes:
+      - ./email_reader/src:/app/src
+    ports:
+      - "8001:80"
+    environment:
+      CACHE_CAPACITY_EMAIL_ID_LIST: 10
+      CACHE_CAPACITY_EMAIL_MODEL_LIST: 3
+      PAGE_SIZE: 20
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_USER: ${EMAIL_USER}
+      ENVIRONMENT: ${ENVIRONMENT}
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  uptime-migrations:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    entrypoint: [ "poetry", "run", "alembic" ]
+    command: [ "upgrade", "head" ]
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+    networks:
+      - backend-network
+
+  postgres:
+    image: "postgres:latest"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+
+volumes:
+  postgres-data:
+
+
+networks:
+  backend-network:
+  frontend-network:
+
+
