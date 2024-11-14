@@ -1,59 +1,61 @@
 services:
   memcached:
     image: memcached:latest
-    container_name: memcached
     ports:
       - "11211:11211"
+    networks:
+      - backend-network
 
   postgres:
-    container_name: database
     image: "postgres:latest"
     environment:
-      POSTGRES_PASSWORD: uptpgpw
-      POSTGRES_USER: uptime
-      POSTGRES_DB: uptime-db
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
 
   email-api:
-    container_name: email-api
-    image: appsuptime:email-api
     build:
       context: ./email_reader
       dockerfile: Dockerfile.dev
-    env_file:
-      - ./email_reader/.env
     volumes:
       - ./email_reader/src:/app/src
     ports:
       - "8001:80"
       - "5679:5679"
     environment:
-      ENVIRONMENT: dev
       CACHE_CAPACITY_EMAIL_ID_LIST: 10
       CACHE_CAPACITY_EMAIL_MODEL_LIST: 3
       PAGE_SIZE: 20
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_USER: ${EMAIL_USER}
+      ENVIRONMENT: ${ENVIRONMENT}
+    networks:
+      - backend-network
+    restart: unless-stopped
 
   uptime-migrations:
-    container_name: alembic
     build:
       context: ./backend
       dockerfile: Dockerfile
-    entrypoint: ["poetry", "run", "alembic"]
-    command: ["upgrade", "head"]
+    entrypoint: [ "poetry", "run", "alembic" ]
+    command: [ "upgrade", "head" ]
     environment:
-      DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
     depends_on:
       - postgres
     volumes:
       - ./backend/src:/app/src
       - ./backend/migrations:/app/migrations
+    networks:
+      - backend-network
 
   uptime-api:
-    container_name: uptime-api
-    image: appsuptime:uptime-api
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -66,27 +68,42 @@ services:
     depends_on:
       - postgres
       - email-api
+    networks:
+      - backend-network
+      - frontend-network
     environment:
-      ENVIRONMENT: dev
-      DATABASE_URL: "postgresql://uptime:uptpgpw@postgres:5432/uptime-db"
+      ENVIRONMENT: ${ENVIRONMENT}
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
       EMAIL_PROCESSING_THREADS: 8
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
   ui:
-    container_name: ui
     build:
       context: ./ui
       dockerfile: Dockerfile.dev
+    env_file:
+      - ./.env
     volumes:
       - ./ui:/app
     ports:
-      - "3000:3000"
-      - "9229:9229"
-    environment:
-      NODE_ENV: development
+      - "3001:3000"
     depends_on:
-      - postgres
       - uptime-api
-      - email-api
+    networks:
+      - frontend-network
+    environment:
+      NODE_ENV: "development"
+      API_BASE_URL: ${API_BASE_URL}
 
 volumes:
   postgres-data:
+
+
+networks:
+  backend-network:
+  frontend-network:

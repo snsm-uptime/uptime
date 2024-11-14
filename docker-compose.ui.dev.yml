@@ -12,14 +12,14 @@ services:
     ports:
       - "3001:3000"
     depends_on:
-      - uptime-api
+      - backend
     networks:
       - frontend-network
     environment:
-      NODE_ENV: "development"
+      NODE_ENV: ${ENVIRONMENT}
       API_BASE_URL: ${API_BASE_URL}
 
-  uptime-api:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -64,7 +64,7 @@ services:
       - backend-network
     restart: unless-stopped
 
-  uptime-migrations:
+  migrations:
     build:
       context: ./backend
       dockerfile: Dockerfile
