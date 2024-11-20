@@ -18,6 +18,7 @@ services:
     environment:
       NODE_ENV: ${ENVIRONMENT}
       API_BASE_URL: ${API_BASE_URL}
+      DEFAULT_ROWS: ${DEFAULT_ROWS}
 
   backend:
     build:
