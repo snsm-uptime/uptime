@@ -1,3 +1,9 @@
+# Tools
+For faster migration usage and other useful aliases:
+```sh
+source ./project-alias.sh
+```
+
 # .env Configuration
 Create a .env file in the root directory with the following values:
 
@@ -12,3 +18,8 @@ EMAIL_USER=
 EMAIL_PASSWORD=
 DEFAULT_ROWS=
 ```
+
+
+# TODO: Roadmap
+- [ ] fix recurrent calls to api for table
+- [ ] trigger refresh for sidebar stats on pull from api
