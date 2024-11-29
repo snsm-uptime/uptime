@@ -1,19 +1,12 @@
-WITH
-    date_range AS (
-        SELECT
-            '2024-10-01'::DATE AS start_date,
-            '2024-11-14'::DATE AS end_date
-    )
 SELECT
-    business,
-    bank_name,
-    body,
-    date
+    n.nspname AS schema_name,
+    t.typname AS enum_type,
+    e.enumlabel AS enum_value
 FROM
-    transactions,
-    date_range
-WHERE
-    currency = 'CRC'
-    AND date BETWEEN date_range.start_date AND date_range.end_date
+    pg_type t
+    JOIN pg_enum e ON t.oid = e.enumtypid
+    JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
 ORDER BY
-    date ASC
+    schema_name,
+    enum_type,
+    e.enumsortorder;

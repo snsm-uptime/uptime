@@ -23,3 +23,5 @@ DEFAULT_ROWS=
 # TODO: Roadmap
 - [ ] fix recurrent calls to api for table
 - [ ] trigger refresh for sidebar stats on pull from api
+- [ ] WIP: finish dashboard layout
+- [ ] WIP: finish navbar
